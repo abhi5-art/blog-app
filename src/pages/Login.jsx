@@ -1,79 +1,71 @@
-import axios from '../utils/axiosInstance'
-import { useState } from 'react';
-import { toast } from 'react-toastify';
-import loginValidator from '../validators/loginValidator';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { toast } from "react-toastify";
+import axios from "../utils/axiosInstance";
+import loginValidator from "../validators/loginValidator";
+import { useNavigate, Link } from "react-router-dom";
 
-const initialFormdata = {
-    email : "",
-    password : ""
+const initialFormData = {
+  email: "",
+  password: "",
 };
+
 const initialFormError = {
-    email : "",
-    password : "",
+  email: "",
+  password: "",
 };
+
 const Login = () => {
-     const [formData, setFormData] = useState(initialFormdata);
-     const [formError, setFormError] = useState(initialFormError);
-     const [loading, setLoading] = useState(false);
-    
-     const navigate = useNavigate();
+  const [formData, setFormData] = useState(initialFormData);
+  const [formError, setFormError] = useState(initialFormError);
+  const [loading, setLoading] = useState(false);
 
-     const handleSubmit = async (e) => {
-        e.preventDefault();
-        const errors = loginValidator({
-          email : formData.email,
-          password : formData.password
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const errors = loginValidator({
+      email: formData.email,
+      password: formData.password,
+    });
+
+    if (errors.email || errors.password) {
+      setFormError(errors);
+    } else {
+      try {
+        setLoading(true);
+        // api request
+        const response = await axios.post("/auth/signin", formData);
+        const data = response.data;
+
+        window.localStorage.setItem("blogData", JSON.stringify(data.data));
+
+        toast.success(data.message, {
+          position: "top-right",
+          autoClose: true,
         });
+        setFormData(initialFormData);
+        setFormError(initialFormError);
+        setLoading(false);
+        navigate("/");
+      } catch (error) {
+        setLoading(false);
+        setFormError(initialFormError);
+        const response = error.response;
+        const data = response.data;
+        toast.error(data.message, {
+          position: "top-right",
+          autoClose: true,
+        });
+      }
+    }
+  };
 
-        if(errors.email || errors.password){
-            setFormError(errors);
-        }else{
-           try{
-             setLoading(true);
-
-             //api request
-             const requestBody = {
-               email : formData.email,
-               password : formData.password
-             }
-             const response = await axios.post(
-              "/auth/signin",
-              requestBody
-            ); 
-             //restoring user information and token to browser local storage
-              const data = response.data;
-              window.localStorage.setItem("blogData", JSON.stringify(data.data));//browserlocalstorage stores data in string form
-
-              const p=response.data.message;
-             
-             toast.success(p, {
-               position :"top-right",
-               autoClose : 3000,
-             });
-             
-             setFormData(initialFormdata);
-             setFormError(initialFormError);
-             setLoading(false);
-             
-             navigate("/");
-           }catch(error){
-              setLoading(false);
-              setFormError(initialFormError);
-              const data = error.response.data;
-              toast.error(data.message, {
-               position :"top-right",
-               autoClose : 3000,
-             });
-
-           }
-        }
-    };
-      
-     const handleChange = (e) => {
-          setFormData( (prev) => ({...prev, [e.target.name] : e.target.value}));
-    };
-    return (
+  return (
     <div className="form-container">
       <form className="inner-container" onSubmit={handleSubmit}>
         <h2 className="form-title">Login Form</h2>
@@ -88,7 +80,7 @@ const Login = () => {
             value={formData.email}
             onChange={handleChange}
           />
-        { formError.email && <p className="error">{formError.email}</p>}
+          {formError.email && <p className="error">{formError.email}</p>}
         </div>
 
         <div className="form-group">
@@ -101,18 +93,18 @@ const Login = () => {
             value={formData.password}
             onChange={handleChange}
           />
-        { formError.password && <p className="error">{formError.password}</p>}
+          {formError.password && <p className="error">{formError.password}</p>}
         </div>
 
-        <a className="forgot-password" to="/forgot-password">
+        <Link className="forgot-password" to="/forgot-password">
           Forgot Password
-        </a>
+        </Link>
 
         <div className="form-group">
-         <input 
-            className="button" 
-            type="submit" 
-            value={`${loading ? "Loading..." : "Login"}`}
+          <input
+            className="button"
+            type="submit"
+            value={`${loading ? "Loging..." : "Login"}`}
           />
         </div>
       </form>

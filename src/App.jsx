@@ -18,6 +18,8 @@ import VerifyUser from './pages/VerifyUser'
 import NewPost from './pages/post/NewPost'
 import DetailedPost from './pages/post/DetailedPost'
 import UpdatePost from './pages/post/UpdatePost'
+import ForgotPassword from "./pages/ForgotPassword";
+
 function App() {
 
   return (
@@ -33,8 +35,8 @@ function App() {
 
          <Route path='posts' element={<ListPost/>}/>
          <Route path='posts/new-post' element={<NewPost/>}/>
-         <Route path='posts/detail-post' element={<DetailedPost/>}/>
-         <Route path='posts/update-post' element={<UpdatePost/>}/>
+         <Route path='posts/detail-post/:id' element={<DetailedPost/>}/>
+         <Route path='posts/update-post/:id' element={<UpdatePost/>}/>
 
          <Route path='profile' element={<Profile/>}/>
          <Route path='setting' element={<Setting/>}/>
@@ -43,6 +45,7 @@ function App() {
       <Route element={<PublicLayout />}>
          <Route path="signup" element={<Signup />}/>
          <Route path="login" element={<Login />}/>
+          <Route path="forgot-password" element={<ForgotPassword />} />
       </Route>
       </Routes>
       <ToastContainer />

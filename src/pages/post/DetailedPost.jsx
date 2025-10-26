@@ -1,36 +1,149 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "../../utils/axiosInstance";
+import { toast } from "react-toastify";
+import moment from "moment";
+import { Modal, Button } from "react-bootstrap";
 
 const DetailedPost = () => {
+  const [post, setPost] = useState(null);
+  const [fileUrl, setFileUrl] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
   const navigate = useNavigate();
+  const params = useParams();
+  const postId = params.id;
+
+  useEffect(() => {
+    if (postId) {
+      const getPost = async () => {
+        try {
+          // api request
+          const response = await axios.get(`/posts/${postId}`);
+          const data = response.data.data;
+
+          setPost(data.post);
+        } catch (error) {
+          const response = error.response;
+          const data = response.data;
+          toast.error(data.message, {
+            position: "top-right",
+            autoClose: true,
+          });
+        }
+      };
+
+      getPost();
+    }
+  }, [postId]);
+
+  useEffect(() => {
+    if (post && post?.file) {
+      const getFile = async () => {
+        try {
+          // api request
+          const response = await axios.get(
+            `/file/getFile?public_id=${post.file.public_id}`   
+          );
+          const url = response.data.data;
+          console.log(url);
+          setFileUrl(url);
+        } catch (error) {
+          const response = error.response;
+          // console.log(error);
+          const data = response.data;
+          toast.error(data.message, {
+            position: "top-right",
+            autoClose: true,
+          });
+        }
+      };
+
+      getFile();
+    }
+  }, [post]);
+
+  const handleDelete = async () => {
+    try {
+      const response = await axios.delete(`/posts/${postId}`);
+
+      setShowModal(false);
+
+      const data = response.data;
+      toast.success(data.message, {
+        position: "top-right",
+        autoClose: true,
+      });
+
+      navigate("/posts");
+    } catch (error) {
+      setShowModal(false);
+      const response = error.response;
+      const data = response.data;
+      toast.error(data.message, {
+        position: "top-right",
+        autoClose: true,
+      });
+    }
+  };
 
   return (
     <div>
-      <button
-      className="button-block"
-      onClick={() => navigate(-1)}>
+      <button className="button-block" onClick={() => navigate(-1)}>
         Go Back
       </button>
       <button
-      className="button-block"
-      onClick={() => navigate("/posts/update-post")}>
+        className="button-block"
+        onClick={() => navigate(`/posts/update-post/${postId}`)}
+      >
         Update Post
       </button>
-      <button className="button-block">Delete Post</button>
+      <button
+        className="button-block"
+        onClick={() => setShowModal(true)}
+      >
+        Delete Post
+      </button>
       <div className="detail-container">
-        <h2 className="post-title">Post Title</h2>
-        <h5 className="post-category">Category: Category 1</h5>
-        <h5 className="post-category">Created at:2023-10-01 14:43:52</h5>
-        <h5 className="post-category">Updated at: 2023-10-01 14:43:52</h5>
-        <p className="post-desc">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Quasi magnam,
-          vel molestias accusamus mollitia non nostrum aliquid officiis ad
-          necessitatibus, vitae dicta aperiam voluptates sint et laboriosam!
-          Blanditiis fugit quidem minus vero! Tempore obcaecati saepe ex velit,
-          aperiam eos sed necessitatibus cum sunt magni unde ipsam eius enim,
-          similique placeat.
-        </p>
+        <h2 className="post-title">{post?.title}</h2>
+        <h5 className="post-category">Category: {post?.category?.title}</h5>
+        <h5 className="post-category">
+          Created at: {moment(post?.createdAt).format("YYYY-MM-DD HH:mm:ss")}
+        </h5>
+        <h5 className="post-category">
+          Updated at: {moment(post?.updatedAt).format("YYYY-MM-DD HH:mm:ss")}
+        </h5>
+        <p className="post-desc">{post?.desc}</p>
 
+        <img src={fileUrl} alt="mern" />
       </div>
+
+      <Modal
+        show={showModal}
+        onHide={() => {
+          setShowModal(false);
+        }}
+      >
+        <Modal.Header closeButton={true}>
+          <Modal.Title>Are you sure you want to delete?</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Footer>
+          <div style={{ margin: "0 auto" }}>
+            <Button
+              className="no-button"
+              onClick={() => {
+                setShowModal(false);
+              }}
+            >
+              No
+            </Button>
+            <Button className="yes-button" onClick={handleDelete}>
+              Yes
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
